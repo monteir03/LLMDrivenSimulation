@@ -1,8 +1,8 @@
 {
-    "reason_for_an_action": "Adding the first row of light balls will kickstart the process and allow us to mix the balls strategically.",
+    "reason_for_an_action": "The top layer of light balls needs to be mixed with the normal and heavy ball layers.",
     "action": "add_balls",
     "parameters": {
-        "row_number": 1,
-        "unit_of_weight": 1
+        "row_number": "2",
+        "unit_of_weight": "3"
     }
 }

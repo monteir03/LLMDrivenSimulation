@@ -35,12 +35,12 @@ def test_ollama3_inference(prompt):
 
 
 #*****testing global variables******#
-call_count = 0
+#call_count = 0
 
 # Define a function that modifies the global variable
 def increment_call_count():
 #   global call_count  # Use the global variable call_count, not a new local one -> this test can perturb the real code ! WATHOUT???
-    call_count += 1  # Increment the global variable by 1
+    #call_count += 1  # Increment the global variable by 1
     print(f"Call count after increment: {call_count}")
    
 #####_______ testing with hugging face inference API _______#####
@@ -63,5 +63,7 @@ def huggingface_test():
     	max_tokens=500
     )
 
-    print(completion.choices[0].message)
+    print(completion.choices[0].message['content'])
 
+if __name__ == "__main__":
+    huggingface_test()

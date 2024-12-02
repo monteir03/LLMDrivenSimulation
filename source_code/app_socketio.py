@@ -70,7 +70,7 @@ def run_simulation_periodically():
         while True:
             container_state = simulation.container_state
             user_set_objective = """The goal is to mix the balls of 3 different weights by strategically adding rows and utilizing the shaking action to achieve a homogenous distribution of all types of balls within the container.
-            In total, you need add 4 rows of light balls, 3 rows of normal balls, and 3 rows of heavy balls to complete the process. The container must be filled with exactly 10 rows of balls by the end of the process.
+            In total, you need add 4 rows of light balls, 3 rows of normal balls, and 3 rows of heavy balls to complete the process. You should fill the rows in the order you find more suitable. The container must be filled with exactly 10 rows of balls by the end of the process.
             """
             if mode == 'agents system with extra measurement of heterogeneity':
                 while not user_started_auto_mode:
