@@ -7,7 +7,7 @@ Among many LLMs, using GPT-4 is recommended, as the reasoning capability of the 
 ## Installation
 To set up the project locally, follow these steps:
 
-1. Download the code and open with IDE, **python 3.9** is recommended for the environment to avoid package incompatibility.
+1. Download the code and open with IDE, **python 3.9** is recommended for the environment to avoid package incompatibility. [For me is working with python3.10.15 that is better for opensource LLM packages]
 
 2. Install the required dependencies:
    ```

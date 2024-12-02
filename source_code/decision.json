@@ -1,8 +1,8 @@
 {
-    "reason_for_an_action": "To start filling the container towards achieving a mixed distribution of balls, beginning with heavier balls to take advantage of gravity during the shake process.",
+    "reason_for_an_action": "Adding the first row of light balls will kickstart the process and allow us to mix the balls strategically.",
     "action": "add_balls",
     "parameters": {
-        "row_number": 2,
-        "unit_of_weight": 3
+        "row_number": 1,
+        "unit_of_weight": 1
     }
 }

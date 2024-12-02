@@ -2,6 +2,13 @@ from llm import gpt_model_call
 import json
 
 class SimpleDecisionAgent:
+    '''action: add_balls, shake, stop, each action has it's parameters
+     add_balls: row_number, unit_of_weight ;
+     shake: no parameters; -> meaning shake action is 1 shake.
+     stop: no parameters; -> meaning stop action is 1 stop.
+
+     '''
+    
     def __init__(self):
         self.prompt_template = """You are a ball mixing machine operator. This machine mixes three types of balls—heavy, normal, and light—within a container. All balls are identical in size but differ in weight. The mixing process takes place in a two-dimensional container designed as a 10x10 matrix, allowing for 10 rows of 10 balls each.
 
@@ -41,7 +48,7 @@ Actions:
 (2) Shaking the Container:
 - After each shake, gravity may cause heavier balls to switch positions with lighter balls immediately below them.
 - The shaking action helps to mix the balls of different weights.
-- You can perform the shake action in this format: {"action": "shake", "parameters":{}}.
+- You can perform the shake action in this format: {"action": "shake", "parameters":{}}.   
 
 (3) Stop:
 - You terminate the process if the distribution of balls is well mixed and the container has 10 rows of balls.
@@ -66,7 +73,7 @@ Output:"""
 
     def generate_output(self, input_text, model):
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
-        # print(input_text)
+        print(input_text)#
         print("***********************")
         print("Simple GPT Working")
         print("***********************")
@@ -93,6 +100,8 @@ Output:"""
 
 
 class SituationAnalysisAgent:
+    '''
+    this is more like a observation agent'''
     def __init__(self):
         self.prompt_template = """You are a ball mixing machine operator. This machine mixes three types of balls—heavy, normal, and light—within a container. All balls are identical in size but differ in weight. The mixing process takes place in a two-dimensional container designed as a 10x10 matrix, allowing for 10 rows of 10 balls each.
 
@@ -347,6 +356,11 @@ Output:"""
 
 
     def generate_output(self, input_text, delta_mixing_index, model):
+        if delta_mixing_index is None:
+            delta_mixing_index = "No change in mixing index available"
+        else:
+            delta_mixing_index = str(delta_mixing_index)
+    
         self.prompt = self.prompt_template.replace("{{agent_objective}}", self.agent_objective)
         self.prompt = self.prompt.replace("{{input_text}}", input_text)
         self.prompt = self.prompt.replace("{{delta_mixing_index}}", delta_mixing_index)
@@ -356,6 +370,7 @@ Output:"""
         print("Input Observation Agent:\n")
         print("***********************")
         print(self.prompt)
+
         try:
             text_output = gpt_model_call(self.prompt, model=model)
 

@@ -3,36 +3,36 @@ from io import BytesIO
 import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
+import matplotlib.patches as patches  # packege for drawing shapes of balls in matplotlib
 
 
 matplotlib.use('Agg')
 
-class ContainerBallSimulation:
+class ContainerBallSimulation:                            
     def __init__(self, size=(10, 10)):
         self.size = size
         self.container_state = np.zeros(size, dtype=int)  # Initialize container with zeros
-        self.colors = {0: 'white', 1: 'yellow', 2: 'red', 3: 'blue'}  # Colors for each weight
-        self.step_log = []
-        self.step_counter = 0
+        self.colors = {0: 'white', 1: 'yellow', 2: 'red', 3: 'blue'}  # Colors for each weight. 1 is lightest, 3 is heaviest
+        self.step_log = []      # Log of steps taken in the simulation
+        self.step_counter = 0   # Counter for the number of steps taken
 
     def use_example(self, example_num):
-        self.container_state = np.zeros(self.size, dtype=int)  # Reset container state
+        self.container_state = np.zeros(self.size, dtype=int)  # Reset container state (creat a new one with zeros sizeXsize)
 
         # Mapping of examples to their configurations
-        example_rows = {
-            1: [(0, 4, 1), (4, 7, 2), (7, 10, 3)],
+        example_rows = {    
+            1: [(0, 4, 1), (4, 7, 2), (7, 10, 3)],  # (a,b,c) where a is the start row, b is the end row, and c is the weight/color of the ball
             2: [(0, 3, 1), (3, 6, 2), (6, 7, 1), (7, 10, 3)],
             3: [(0, 4, 1), (4, 6, 3), (6, 9, 2), (9, 10, 3)],
             4: [(0, 3, 1), (3, 5, 3), (5, 8, 2), (8, 9, 1), (9, 10, 3)],
-            5: [(0, 10, 0)]
+            5: [(0, 10, 0)]  
         }
 
-        rows = example_rows.get(example_num, [])
-        for start, end, weight in rows:
-            self.container_state[start:end, :] = weight
+        rows = example_rows.get(example_num, [])            # [] is the default value if example_num is not found in example_rows
+        for start, end, weight in rows:                     # it pick a row and iterate over each (a,b,c) in the row
+            self.container_state[start:end, :] = weight     # add to the container according to the (a,b,c) values
 
-    def draw_ball(self, ax, center, radius, color):
+    def draw_ball(self, ax, center, radius, color): #
         """Draws a single ball on the ax."""
         circle = patches.Circle(center, radius, color=color, fill=True)
         ax.add_patch(circle)
@@ -43,19 +43,19 @@ class ContainerBallSimulation:
         offset = 0.5  # Offset to center the balls in the grid
 
         # Iterate through the container and draw the balls
-        for i, row in enumerate(np.flipud(self.container_state.copy())):
+        for i, row in enumerate(np.flipud(self.container_state.copy())):  #.copy() to avoid changing the original container_state
             for j, weight in enumerate(row):
 
                 center = (j + offset, self.size[0] - i - offset)
                 self.draw_ball(ax, center, offset, self.colors[weight])
 
-        ax.set_xlim(0, self.size[1])
-        ax.set_ylim(0, self.size[0])
-        ax.set_aspect('equal')
-        ax.axis('off')  # Turn off the axes
-        plt.show()
+        ax.set_xlim(0, self.size[1]) 
+        ax.set_ylim(0, self.size[0])    
+        ax.set_aspect('equal') 
+        ax.axis('off')  # Turn off the axis because it's not meaningful in this context
+        plt.show()      # the container is shown as a plot in the console
 
-    def visualize_container_to_base64(self):
+    def visualize_container_to_base64(self): # this function is used to convert the container to a base64 string, because the container can't be shown in the console
         fig, ax = plt.subplots(figsize=(6, 6))
         offset = 0.5  # Offset to center the balls in the grid
 
@@ -89,7 +89,7 @@ class ContainerBallSimulation:
         base64_string = base64.b64encode(buf.getvalue()).decode('utf-8')
         return base64_string
 
-    def add_balls(self, row_num, weight):
+    def add_balls(self, row_num, weight):  
         """Add balls of a specific weight to the container, filling from the top."""
         added = 0
         row_num = int(row_num)
@@ -107,7 +107,7 @@ class ContainerBallSimulation:
             "step": self.step_counter,
             "action": "add_balls",
             "parameters": {
-                "row_number": row_num,
+                "row_number": row_num,      #
                 "unit_of_weight": weight
             },
             "container_state": self.get_container_state().tolist(),
@@ -119,7 +119,9 @@ class ContainerBallSimulation:
 
 
     def shake(self, shake_times):
-        """Shake the container to potentially rearrange balls based on their weights."""
+        """Shake the container to potentially rearrange balls based on their weights.
+        The main goal is to simulate how heavier balls are more likely to move downward and cause a rearrangement, 
+        resulting in a new container state"""
         for _ in range(shake_times):
             for row in range(1, self.size[0]):  # Start from the top row
                 for col in range(self.size[1]):
@@ -189,7 +191,8 @@ class ContainerBallSimulation:
         return self.step_log
 
     def calculate_mixing_index(self,matrix):
-        """Calculate the homogeneity of the mixture in the container."""
+        """Calculate the homogeneity of the mixture in the container.
+        in short words we claculate de average of the number of different neighbors for each element in the matrix"""
         # Initialize the count
         diversity_count = 0
 
@@ -218,16 +221,29 @@ class ContainerBallSimulation:
 
         return normalized_mixing_index
 
-
+'''
 if __name__ == "__main__":
     sim = ContainerBallSimulation()
 
     sim.add_balls(2, 1)
-    sim.add_balls(3, 2)
-    sim.add_balls(2, 1)
-    sim.add_balls(3, 3)
+    print("one")
     print(sim.get_container_state())
+
+    sim.add_balls(3, 2)
+    print("two")
+    print(sim.get_container_state())
+    sim.add_balls(2, 1)
+    print("tre")
+    print(sim.get_container_state())
+
+    sim.add_balls(3, 3)
+    print("for")
+    print(sim.get_container_state())
+
+    print("--")
     sim.shake(1)
     print(sim.get_container_state())
     sim.visualize_container()
 
+    # so the parameters are the number of rows, the weight of the balls and the number of times the container is shaked.
+'''
