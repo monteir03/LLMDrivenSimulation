@@ -4,6 +4,9 @@
 
 This project uses Ollama for running machine learning models locally, making it efficient and easy to manage on your own machine. Additionally, you can easily set up the required Python environment using a provided Conda environment YAML file.
 
+You should use Python 3.10.15.
+if you can't use the yml file to create the conda evnironment use the requirements.txt
+
 ### Prerequisites
 
 - Conda (Anaconda or Miniconda) installed on your machine.
@@ -56,7 +59,7 @@ Ollama is used to run machine learning models locally. Follow these steps to ins
 
 1. **Install Ollama:**
 
-   You can download and install Ollama from its official website: [Ollama Installation](https://ollama.com/docs/installation).
+   You can download and install Ollama from its official website: [Ollama Installation](https://ollama.com/download).
 
 2. **Configure Ollama:**
 
