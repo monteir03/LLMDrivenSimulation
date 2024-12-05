@@ -73,7 +73,7 @@ Output:"""
 
     def generate_output(self, input_text, model):
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
-        print(input_text)#
+        print(input_text)
         print("***********************")
         print("Simple GPT Working")
         print("***********************")
@@ -255,10 +255,10 @@ Output:"""
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
         self.prompt = self.prompt.replace("{{agent_objective}}", self.agent_objective)
         self.prompt = self.prompt.replace("{{analysis_insights}}", analysis_insights)
-        print("***********************")
         print("Decision Agent Working")
         print("***********************")
         print("Input Decision Agent:\n")
+        print("***********************")
         print("***********************")
         print(self.prompt)
 

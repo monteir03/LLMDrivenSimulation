@@ -1,8 +1,7 @@
 {
-    "reason_for_an_action": "The top layer of light balls needs to be mixed with the normal and heavy ball layers.",
     "action": "add_balls",
     "parameters": {
-        "row_number": "2",
-        "unit_of_weight": "3"
+        "row_number": "5",
+        "unit_of_weight": "2"
     }
 }

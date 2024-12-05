@@ -6,11 +6,11 @@ gpt_call_count = 0
 
 client = InferenceClient(api_key="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")
 
-def gpt_model_call(prompt, model='ollama_llama3'):
+def gpt_model_call(prompt, model='ollama'):
 
     model_config = {
         'hugging_face' : ("meta-llama/Llama-3.2-1B-Instruct",2000),
-        'ollama_llama3': ("llama3:latest", 4000) # Example llama3 model from ollama
+        'ollama': ("llama3.2", 32768)
     }
     model_name, max_tokens = model_config.get(model)
 
@@ -20,13 +20,14 @@ def gpt_model_call(prompt, model='ollama_llama3'):
 
     
 
-    if model in ['ollama_llama3']:
+    if model in ['ollama']:
         # Combine system message and user prompt for ollama
         combined_prompt = "System: You are a helpful assistant designed to output JSON. \nUser: " + prompt
         model_output = ollama.chat(model=model_name, messages=[
             {"role": "user", "content": combined_prompt}
         ])
         model_output = model_output["message"]["content"].strip()
+
 
     elif model in ['hugging_face']:
 

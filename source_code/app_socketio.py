@@ -90,16 +90,16 @@ def run_simulation_periodically():
                 delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
                 delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
 
-                #analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama_llama3')
-                analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama_llama3')
+                #analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama')
+                analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama')
                 if analysis_result is None:
                     analysis_result = "No valid analysis obtained"
 
                 
                 decision_agent = DecisionAgent(user_set_objective)
-                #decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama_llama3')
+                #decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama')
             
-                decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama_llama3')
+                decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama')
                 if not decision or 'action' not in decision:
                     send_message_to_front_end("Invalid decision received, stopping simulation.")
                     break
@@ -155,15 +155,13 @@ def run_simulation_periodically():
             pprint(simulation.step_log)
             decision_log = [{"step": idx, "analysis_result": step["analysis_result"], "decision": step["decision"], "change_of_mixing_index": step["delta_mixing_index"]} for idx, step in enumerate(simulation.step_log)]
             pprint(decision_log)
-            log_summary = log_summarization_agent.generate_output(decision_log, model='ollama_llama3')
+            log_summary = log_summarization_agent.generate_output(decision_log, model='ollama')
             print(log_summary)
             send_message_to_front_end("My job is finished, here is the summary of my work: \n")
             send_message_to_front_end(log_summary)
             # TODO: Compare this result with existing history of all the simulation experiments
 
-
 if __name__ == '__main__':
     run_simulation_thread = threading.Thread(target=run_simulation_periodically)
     run_simulation_thread.start()
     socketio.run(app, debug=False, allow_unsafe_werkzeug=True)
-
