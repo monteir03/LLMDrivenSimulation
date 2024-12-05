@@ -1,6 +1,14 @@
 from llm import gpt_model_call
 import json
 
+# Red color ANSI escape code
+RED = "\033[91m"
+RESET = "\033[0m"  # Reset to default color
+
+# Define color codes
+GREEN = "\033[92m"
+RESET = "\033[0m"  # Reset to default color
+
 class SimpleDecisionAgent:
     '''action: add_balls, shake, stop, each action has it's parameters
      add_balls: row_number, unit_of_weight ;
@@ -239,6 +247,12 @@ Objective:
 
 You shall pay attention to the following insights: {{analysis_insights}}
 
+You shall pay attention to the following:
+- If the container is not full, you should decide to "add_balls" until it is full.
+- If the container is full, adding more balls is not allowed. Only "shake" or "stop" actions can be performed.
+- Ensure the decision respects the container's current state and the mixing index insights.
+
+
 For example, you provide the output in this format after you receive the input:
 Input:
 // 10 rows of balls with their weight number representing the current state of the container, the bottom row is at the bottom of the matrix.
@@ -255,11 +269,12 @@ Output:"""
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
         self.prompt = self.prompt.replace("{{agent_objective}}", self.agent_objective)
         self.prompt = self.prompt.replace("{{analysis_insights}}", analysis_insights)
-        print("***********************")
+        print(f"{RED}***********************")
         print("Decision Agent Working")
         print("***********************")
         print("Input Decision Agent:\n")
         print("***********************")
+        print(f"{RESET}")
         print(self.prompt)
 
         try:
@@ -334,6 +349,7 @@ Actions:
 Objective:
 {{agent_objective}}
 
+
 You will receive the input of the current container state and please concisely describe the current situation within one sentence in terms of:
 - The current state of the container.
 - The number of rows filled and how many more rows of different types of balls are required to complete the process.
@@ -341,12 +357,17 @@ You will receive the input of the current container state and please concisely d
 - A mixing index is an indicator about how evenly distributed are the different types of balls. Review the change of the mixing index after the last shake action, and if the mixing index has been changed into negative value, stop.
 - Highlight one important aspects of the current situation to achieve the objective described above.
 
+ou shall pay attention to the following:
+- If the container is not full, you should decide to "add_balls" until it is full.
+- If the container is full, adding more balls is not allowed. Only "shake" or "stop" actions can be performed.
+- Ensure the decision respects the container's current state and the mixing index insights.
+
 For example, you provide the summarized description in this format after you receive the input:
 Input:
 // 10 rows of balls with their weight number representing the current state of the container, the bottom row is at the bottom of the matrix.
 // The change of mixing index after the last shake action.
 Output:
-{"container_state": "", "rows_filled": "", "number_of_rows_required": {"light_ball": "", "normal_ball": "", "heavy_ball": ""}, "distribution": "", "change_of_mixing_index": "", "important_aspect": ""}
+{"container_state": "", "rows_filled": "", "number_of_rows_required": {"light_ball": "", "normal_ball": "", "heavy_ball": ""},"is_full": "","distribution": "", "change_of_mixing_index": "", "important_aspect": ""}
 
 You should now finish the output:
 Input:
@@ -364,11 +385,12 @@ Output:"""
         self.prompt = self.prompt_template.replace("{{agent_objective}}", self.agent_objective)
         self.prompt = self.prompt.replace("{{input_text}}", input_text)
         self.prompt = self.prompt.replace("{{delta_mixing_index}}", delta_mixing_index)
-        print("\n\n***********************")
-        print("Observation Agent Working (Using Tool)")
-        print("***********************")
-        print("Input Observation Agent:\n")
-        print("***********************")
+        # Print with green color
+        print(f"\n\n{GREEN}***********************{RESET}")
+        print(f"{GREEN}Observation Agent Working (Using Tool){RESET}")
+        print(f"{GREEN}***********************{RESET}")
+        print(f"{GREEN}Input Observation Agent:\n{RESET}")
+        print(f"{GREEN}***********************{RESET}")
         print(self.prompt)
 
         try:

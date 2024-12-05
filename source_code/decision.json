@@ -1,8 +1,8 @@
 {
-    "reason_for_an_action": "To start mixing different types of balls, we need to add some normal or heavy balls.",
+    "reason_for_an_action": "The container is not full, and we need to add more rows of different types of balls.",
     "action": "add_balls",
     "parameters": {
-        "row_number": "7",
+        "row_number": "5",
         "unit_of_weight": "2"
     }
 }

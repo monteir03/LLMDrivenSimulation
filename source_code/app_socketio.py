@@ -144,13 +144,13 @@ def run_simulation_periodically():
                     simulation.step_log[-1]["decision"] = decision
                     send_message_to_front_end('stop' + ". Reason:" + analysis_result)
                     break
-            if mode == 'agents system with extra measurement of heterogeneity':
+            if mode != 'agents system with extra measurement of heterogeneity':
                 simulation.step_log[-1]["analysis_result"] = analysis_result
                 simulation.step_log[-1]["decision"] = decision
             base64_img = simulation.visualize_container_to_base64()
             socketio.emit('update_image', {'base64_img': base64_img})
 
-        if mode == 'agents system with extra measurement of heterogeneity':
+        if mode != 'agents system with extra measurement of heterogeneity':
             log_summarization_agent = LogSummarizationAgent(user_set_objective)
             pprint(simulation.step_log)
             decision_log = [{"step": idx, "analysis_result": step["analysis_result"], "decision": step["decision"], "change_of_mixing_index": step["delta_mixing_index"]} for idx, step in enumerate(simulation.step_log)]
