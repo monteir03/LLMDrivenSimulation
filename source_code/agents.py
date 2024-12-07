@@ -54,6 +54,7 @@ In the matrix a row is empty if it is made by empty cells represented by number 
 The gravity has effect on balls and its direction is from row 10 to row 1. So the row 1 is the bottom row and row 10 is the top row.
 The container is filled row by row from the bottom to the top.
 The container can hold up to exactly **10 rows** of balls. The process ends when there are no longer empty rows (filled with 0).
+When new rows of balls are added, they fall and settle on top of existing rows, filling the first available empty rows above.
 
 ### Objective:
 You will receive as input current state of the container represented as a 10x10 matrix and external insights about it. 
@@ -64,7 +65,7 @@ You should answear in the output format.
 1. **Add Balls**:
    - If the container has fewer than 10 rows filled, you can add rows of balls, either 1, 2, or 3 rows at a time, of the same type.
    - The total number of rows must not exceed 10.
-   - Output Format: {"action": "add_balls", "parameters": {"row_number": <int>, "unit_of_weight": <int>}}
+   - Output Format: {"action": "add_balls", "parameters": {"number_of_rows_added": <int>, "unit_of_weight": <int>}}
 
 ### Action Rules:
 - If the container has fewer than 10 rows filled:
@@ -77,7 +78,7 @@ look at itraction example
 Input exemple:
 Current state of the container, with fewer than 10 rows filled.
 Output exemple:
-{"reason_for_an_action": "", "action": "add_balls", "parameters": {"row_number": <int>, "unit_of_weight": <int>}}
+{"reason_for_an_action": "", "action": "add_balls", "parameters": {"number_of_rows_added": <int>, "unit_of_weight": <int>}}
 
 ### Input:
 You shall pay attention to the following insights: {{analysis_insights}}
