@@ -1,0 +1,5 @@
+{
+    "reason_for_an_action": "The container has exactly 10 rows filled and is well-mixed.",
+    "action": "stop",
+    "parameters": {}
+}

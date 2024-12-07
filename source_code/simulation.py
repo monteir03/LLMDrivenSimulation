@@ -185,6 +185,16 @@ class ContainerBallSimulation:
         formatted_rows = [f"row {10 - i}: {row.strip()}" for i, row in enumerate(rows)]
         formatted_string = '\n'.join(formatted_rows)
         return formatted_string
+    
+    def get_container_minimal_state(self):
+        """Return the current state of the container in text format without row labels or numbers."""
+        # Flip the container state for correct orientation
+        modified_string = ' ' + str(np.flipud(self.container_state.copy()))[1:-1]
+        rows = modified_string.strip().split('\n')
+        # Remove row labels and numbers, only format the matrix
+        formatted_rows = [row.strip() for row in rows]
+        formatted_string = '\n'.join(formatted_rows)
+        return formatted_string
 
     def get_step_log(self):
         """Return the actions log."""
@@ -221,29 +231,11 @@ class ContainerBallSimulation:
 
         return normalized_mixing_index
 
-'''
-if __name__ == "__main__":
-    sim = ContainerBallSimulation()
 
-    sim.add_balls(2, 1)
-    print("one")
-    print(sim.get_container_state())
-
-    sim.add_balls(3, 2)
-    print("two")
-    print(sim.get_container_state())
-    sim.add_balls(2, 1)
-    print("tre")
-    print(sim.get_container_state())
-
-    sim.add_balls(3, 3)
-    print("for")
-    print(sim.get_container_state())
-
-    print("--")
-    sim.shake(1)
-    print(sim.get_container_state())
-    sim.visualize_container()
+#if __name__ == "__main__":
+#    sim = ContainerBallSimulation()
+#    sim.add_balls(2, 1)
+#    print("one")
+#    print(sim.get_container_state_in_text())
 
     # so the parameters are the number of rows, the weight of the balls and the number of times the container is shaked.
-'''

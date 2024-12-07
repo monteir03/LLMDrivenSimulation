@@ -1,7 +1,7 @@
 from flask import Flask, render_template
 from flask_socketio import SocketIO
 from pprint import pprint
-from agents import SimpleDecisionAgent, SituationAnalysisAgent, DecisionAgent, ObservationAnalysisAgentWithTool, LogSummarizationAgent
+from agents import ObservationAnalysisAgentWithTool, AddingAgent, MixingAgent
 from simulation import ContainerBallSimulation
 import threading
 import time
@@ -68,10 +68,10 @@ def run_simulation_periodically():
     with ((app.app_context())):
         time.sleep(5)
         while True:
-            container_state = simulation.container_state
-            user_set_objective = """The goal is to mix the balls of 3 different weights by strategically adding rows and utilizing the shaking action to achieve a homogenous distribution of all types of balls within the container.
-            In total, you need add 4 rows of light balls, 3 rows of normal balls, and 3 rows of heavy balls to complete the process. You should fill the rows in the order you find more suitable. The container must be filled with exactly 10 rows of balls by the end of the process.
-            """
+            container_state = simulation.get_container_state()
+            user_set_objective = """The objective is to fill and then mix a 10x10 container with 4 rows of light balls, 3 rows of normal balls, 
+            and 3 rows of heavy balls. Add rows strategically and use shaking to ensure a homogenous mix."""
+
             if mode == 'agents system with extra measurement of heterogeneity':
                 while not user_started_auto_mode:
 
@@ -91,7 +91,7 @@ def run_simulation_periodically():
                 delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
 
                 #analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama_llama3')
-                analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama_llama3')
+                analysis_result = analysis_agent.generate_output(container_state, delta_mixing_index_text, model='ollama_llama3')
                 if analysis_result is None:
                     analysis_result = "No valid analysis obtained"
 
@@ -99,11 +99,11 @@ def run_simulation_periodically():
                 decision_agent = DecisionAgent(user_set_objective)
                 #decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama_llama3')
             
-                decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama_llama3')
+                decision = decision_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
+                print("this is the decision", decision)
                 if not decision or 'action' not in decision:
                     send_message_to_front_end("Invalid decision received, stopping simulation.")
                     break
-
 
                 experiment_data_structure = {
                     "id": None,
@@ -162,8 +162,82 @@ def run_simulation_periodically():
             # TODO: Compare this result with existing history of all the simulation experiments
 
 
+
+def run_simulation_debug():
+    """
+    Debugging mode: Runs the simulation logic without Flask or Socket.IO.
+    """
+    print("Starting simulation in debugging mode...\n")
+    
+    # not being used now
+    user_set_objective = """The objective is to fill and then mix a 10x10 container with 4 rows of light balls, 3 rows of normal balls, 
+    and 3 rows of heavy balls. Add rows strategically and use shaking to ensure a homogenous mix."""
+
+    # Initialize agents
+    observation_agent = ObservationAnalysisAgentWithTool()
+    adding_agent = AddingAgent()
+    mixing_agent = MixingAgent()
+
+    while True:
+        # Step 1: Get the current container state and mixing index
+        #container_state = simulation.get_container_state_in_text()
+        container_state = simulation.get_container_minimal_state()
+        delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
+        delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
+
+        # Step 2: Observation Analysis
+        analysis_result = observation_agent.generate_output(container_state, delta_mixing_index_text, model='ollama_llama3')
+        if not analysis_result:
+            print("No valid analysis obtained. Exiting simulation.")
+            break
+        
+        # Step 3: Decision Making by the Specific Agent
+        if "Adding Agent" in analysis_result:
+            print("Activating: Adding Agent")
+            decision = adding_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
+        elif "Mixing Agent" in analysis_result:
+            print("Activating: Mixing Agent")
+            decision = mixing_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
+        else:
+            print(f"Unexpected agent suggestion: {analysis_result}. Exiting simulation.")
+            break
+
+        if not decision or 'action' not in decision:
+            print("Invalid decision received. Exiting simulation.")
+            break
+
+        # Step 4: Perform the Action
+        if decision['action'] == 'shake':
+            simulation.shake(1)
+            print("Performed: Shake")
+        
+        elif decision['action'] == 'add_balls':
+            row_number = decision['parameters']['row_number']
+            unit_of_weight = decision['parameters']['unit_of_weight']
+            simulation.add_balls(row_number, unit_of_weight)
+            print(f"Performed: Add {unit_of_weight} balls to row {row_number}")
+        
+        elif decision['action'] == 'stop':
+            print("Performed: Stop")
+            print("Simulation completed successfully.")
+            break
+        else:
+            print(f"Unexpected action: {decision['action']}. Exiting simulation.")
+            break
+
+        # Step 5: Visualize the current container state (optional: save to a file or display as text)
+        print("\nCurrent Container State:")
+        for row in simulation.get_container_state():
+            print(row)
+
+        # Add a delay to simulate time between steps
+        time.sleep(1)
+
+
+
 if __name__ == '__main__':
-    run_simulation_thread = threading.Thread(target=run_simulation_periodically)
-    run_simulation_thread.start()
-    socketio.run(app, debug=False, allow_unsafe_werkzeug=True)
+    #run_simulation_thread = threading.Thread(target=run_simulation_periodically)
+    #run_simulation_thread.start()
+    #socketio.run(app, debug=False, allow_unsafe_werkzeug=True)
+    run_simulation_debug()
 

@@ -10,7 +10,7 @@ def gpt_model_call(prompt, model='ollama_llama3'):
 
     model_config = {
         'hugging_face' : ("meta-llama/Llama-3.2-1B-Instruct",2000),
-        'ollama_llama3': ("llama3:latest", 4000) # Example llama3 model from ollama
+        'ollama_llama3': ("qwen2.5-coder:latest", 15000) # Example llama3 model from ollama
     }
     model_name, max_tokens = model_config.get(model)
 

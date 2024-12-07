@@ -1,8 +1,8 @@
 {
-    "reason_for_an_action": "The container is not full, and we need to add more rows of different types of balls.",
-    "action": "add_balls",
+    "reason_for_an_action":"" ,
+    "action": "",
     "parameters": {
-        "row_number": "5",
-        "unit_of_weight": "2"
+        "row_number": "",
+        "unit_of_weight": "" 
     }
 }
