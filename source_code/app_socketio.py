@@ -154,6 +154,14 @@ def run_simulation_debug():
     Debugging mode: Runs the simulation logic without Flask or Socket.IO.
     """
     print("Starting simulation in debugging mode...\n")
+
+    # File to store mixing index history
+    mixing_index_file = "mixing_index_history.txt"
+
+    # Clear the file at the start of the simulation
+    with open(mixing_index_file, "w") as f:
+        f.write("Mixing Index History\n")
+        f.write("=====================\n")
     
     # not being used now
     user_set_objective = """The objective is to fill and then mix a 10x10 container with 4 rows of light balls, 3 rows of normal balls, 
@@ -174,6 +182,10 @@ def run_simulation_debug():
         print("update_info", update_info)
         #delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
         #delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
+
+        # Save the mixing index to the file
+        with open(mixing_index_file, "a") as f:
+            f.write(f"Mixing Index: {mixing_index}\n")
 
         # Step 2: Observation Analysis
         analysis_result = observation_agent.generate_output(container_state, model='ollama_qwencoder')

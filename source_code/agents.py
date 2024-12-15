@@ -290,43 +290,37 @@ Based on the matrix and mixing_index, provide the answer in a JSON format only w
 class ObservationAnalysisAgentWithTool:
     """the output of the observation analysis agent is a summarized observation of the current situation"""
     def __init__(self):
-        self.prompt_template = """You are the Observation Agent in a multi-agent system. Your task is to analyze the state of the container and determine which agent should be activated: the Adding Agent or the Mixing Agent.
+        self.prompt_template = """You are the Observation Agent in a multi-agent system. 
 
 
 
 ### Context:
-- The container is a 10x10 matrix filled from the bottom (row 1) to the top (row 10).
-- There are 3 types of balls with different weights:
+The container is a 10x10 matrix filled from the bottom (row 1) to the top (row 10).
+There are 3 types of balls with different weights:
   - **1** = light ball (weight 1)
   - **2** = normal ball (weight 2)
   - **3** = heavy ball (weight 3)
-- **0** indicates an empty cell in the matrix.
+**0** indicates an empty cell in the matrix.
 
-### Your Task:
-The matrix is **complete: There are not 0 in the matrix**.
-The matrix is **incomplete: There are 0 in the matrix**.
-If the container is incomplete you call **Adding Agent**.
-If the container is complete you call the **Mixing Agent**.
 
 
 ### Example Shots:
 ### Input 
 1.
 The container state is:
-[
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [3 3 3 3 3 3 3 3 3 3]
- [3 3 3 3 3 3 3 3 3 3]
- [3 3 3 3 3 3 3 3 3 3]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
-]
+[0 0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 0 0 0]
+[0 0 0 0 0 0 0 0 0 0]
+[3 3 3 3 3 3 3 3 3 3]
+[3 3 3 3 3 3 3 3 3 3]
+[3 3 3 3 3 3 3 3 3 3]
+[1 1 1 1 1 1 1 1 1 1]
+[1 1 1 1 1 1 1 1 1 1]
+[1 1 1 1 1 1 1 1 1 1]
+[1 1 1 1 1 1 1 1 1 1]
 
-Now, add rows of balls in order to achieve the objectives:
+If the container has zeros **0**, is incomplete and you call **Adding Agent**.
+If the container do not has zeros **0** is complete and you call the **Mixing Agent**.
 
 ### Output 
 Provide the answer in a JSON format only:
@@ -339,19 +333,19 @@ Provide the answer in a JSON format only:
 2.
 ### Input 
 The container state is:
- [3 3 3 3 3 3 3 3 3 3]
- [3 3 3 3 3 3 3 3 3 3]
- [3 3 3 3 3 2 2 3 3 3]
- [2 2 2 2 2 3 3 2 2 2]
- [2 2 2 2 2 2 2 2 2 2]
- [2 2 1 2 1 2 2 1 2 1]
- [1 1 2 1 2 1 1 2 1 2]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
+[3 3 3 3 3 3 3 3 3 3]
+[3 3 3 3 3 3 3 3 3 3]
+[2 3 3 3 1 2 2 3 3 3]
+[3 2 2 2 2 3 3 2 2 2]
+[2 2 2 2 1 2 2 2 2 2]
+[1 2 1 2 3 2 2 1 2 1]
+[1 1 2 1 2 1 1 2 1 2]
+[2 1 1 1 1 1 1 1 1 1]
+[1 1 1 1 2 1 1 1 1 1]
+[1 1 1 1 1 1 1 1 1 1]
 
-
-Now, add rows of balls in order to achieve the objectives:
+If the container has zeros **0**, is incomplete. Coll **Adding Agent**.
+If the container do not has zeros **0** is complete. Call the **Mixing Agent**.
 
 ### Output
 Provide the answer in a JSON format only:
@@ -362,31 +356,11 @@ Provide the answer in a JSON format only:
 }
 
 3.
-### Input 
-The container state is:
- [3 3 3 3 3 3 3 3 3 3]
- [3 3 3 3 3 3 3 3 3 3]
- [3 3 3 3 3 3 3 3 3 3]
- [2 2 2 2 2 2 2 2 2 2]
- [2 2 2 2 2 2 2 2 2 2]
- [2 2 2 2 2 2 2 2 2 2]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
- [1 1 1 1 1 1 1 1 1 1]
-
-Now, add rows of balls in order to achieve the objectives:
-
-### Output
-Provide the answer in a JSON format only:
-
-{
-  "state": complete,
-  "agent_to_call": "Mixing Agent"
-}
-
 ### Input:
 {{input_text}}
+
+If the container has zeros **0**, is incomplete and you call **Adding Agent**.
+If the container do not has zeros **0** is complete and you call the **Mixing Agent**.
 
 ### Output:
 Provide the answer in a JSON format only:
