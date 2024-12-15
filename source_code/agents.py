@@ -174,7 +174,7 @@ Add rows to achieve **respecting the rows left to add** to achieve the objective
 Provide the answer in a JSON format only without extra characters inside of it:
 """
 
-    def generate_output(self, input_text, update_info, analysis_insights, model):
+    def generate_output(self, input_text, update_info, model):
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
         self.prompt = self.prompt.replace("{{update_info}}", update_info)
         print(f"{RED}***********************{RESET}")
@@ -218,65 +218,55 @@ class MixingAgent:
     def __init__(self):
         self.prompt_template = """You are the Mixing Agent in a multi-agent system. 
 
-        
-You are responsible for adding rows of balls to a 10x10 container matrix.
+### Task:
+You are responsible for mixing balls on a 10x10 container matrix.
 There are 3 types of balls:
   - **1** = light ball (weight 1)
   - **2** = normal ball (weight 2)
   - **3** = heavy ball (weight 3)
-The container's gravity causes balls to settle at the lowest empty rows, and the total capacity is 10 rows. 
+The container's gravity causes balls to settle at the lowest empty rows, and the total capacity is 10 rows.
+Heavy balls tend to fall.
+Light balls tend to rise.
 
 ### Objective:
-You will receive as input the current state of the container represented as a 10x10 matrix and external insights about it.
-With that information, you will perform your share or stop action to achieve a well-mixed distribution of balls. You should answer in the output format that is given to you.
-You should answear in the output format.
+Analyse the matrix and decide if the mixture is homogeneously distributed or not.
+Use the mixing index to determine the homogeneity of the mixture.
+If the mixture is homogeneous, **stop**. If not, **shake**.
+if mixing index value close to 1 **shake**. 
+If mixing index  value e close to 0 **stop**.
 
-### Actions:
-1. **Shake the Container**:
-   - If the container has exactly 10 rows filled, you can shake it to mix balls of different weights.
-   - Output Format: {"action": "shake", "parameters": {}}
-
-2. **Stop**:
-   - If the container has exactly 10 rows filled and the distribution of balls is well mixed, you should stop the process.
-   - Output Format: {"action": "stop", "parameters": {}}
-
-### Action Rules:
-- If the container has exactly 10 rows filled:
-  - The action **"add_balls"** must not be used.
-  - Decide between **"shake"** or **"stop"** based on the mixing state and insights provided.
-
-# Output Format
-For example, you provide the output in this format after you receive the input (matrix and insights):
-Input example:
-// Current state of the container, with exactly 10 rows filled.
-Output example:
-{"reason_for_an_action": "", "action": "shake", "parameters": {}}
+### Action Format:
+{"reason_for_an_action": "", "action": "shake or stop"}
 
 ### Input:
-You shall pay attention to the following insights: {{analysis_insights}}
+You shall pay attention to the following insights: {{mixing_index}}
 The container state is:
 {{input_text}}
 
-You should now finish the output, and only generate one action. Generate only the JSON Output Format:
+The mixing index of this matrix is:
+{{mixing_index}}
 
+
+Based on the matrix and mixing_index, provide the answer in a JSON format only without extra characters inside of it:
 ###Output:
 """
 
 
-    def generate_output(self, input_text, analysis_insights, model):
+    def generate_output(self, input_text, mixing_index, model):
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
-        #self.prompt = self.prompt.replace("{{agent_objective}}", self.agent_objective)
-        self.prompt = self.prompt.replace("{{analysis_insights}}", analysis_insights)
+        self.prompt = self.prompt.replace("{{mixing_index}}", mixing_index)
         print(f"{RED}***********************{RESET}")
         print(f"{RED}Mixing Agent Working{RESET}")
         print(f"{RED}***********************{RESET}")
         print(f"{RED}Input Mixing Agent:{RESET}")
         print(f"{RED}***********************{RESET}")
         print(self.prompt)
+        print("mixing index", mixing_index)
 
         try:
             text_output = gpt_model_call(self.prompt, model=model)
             text_output = extract_and_clear_json_str(text_output)
+            print(text_output)
         except Exception as e:
             print(f"Error: {e}")
             return None
@@ -349,13 +339,13 @@ Provide the answer in a JSON format only:
 2.
 ### Input 
 The container state is:
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
- [0 0 0 0 0 0 0 0 0 0]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 2 2 3 3 3]
+ [2 2 2 2 2 3 3 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 1 2 1 2 2 1 2 1]
+ [1 1 2 1 2 1 1 2 1 2]
  [1 1 1 1 1 1 1 1 1 1]
  [1 1 1 1 1 1 1 1 1 1]
  [1 1 1 1 1 1 1 1 1 1]
@@ -367,8 +357,8 @@ Now, add rows of balls in order to achieve the objectives:
 Provide the answer in a JSON format only:
 
 {
-  "state": incomplete,
-  "agent_to_call": "Adding Agent"
+  "state": complete,
+  "agent_to_call": "Mixing Agent"
 }
 
 3.

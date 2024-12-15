@@ -67,10 +67,20 @@ def handle_user_message(json):
 def run_simulation_periodically():
     with ((app.app_context())):
         time.sleep(5)
+        print("Starting simulation in debugging mode...\n")
+    
+        # not being used now
+        user_set_objective = """The objective is to fill and then mix a 10x10 container with 4 rows of light balls, 3 rows of normal balls, 
+        and 3 rows of heavy balls. Add rows strategically and use shaking to ensure a homogenous mix."""
+
+        # Initialize agents
+        observation_agent = ObservationAnalysisAgentWithTool()
+        adding_agent = AddingAgent()
+        mixing_agent = MixingAgent()
         while True:
             container_state = simulation.get_container_state_in_text()
-            user_set_objective = """The objective is to fill and then mix a 10x10 container with 4 rows of light balls, 3 rows of normal balls, 
-            and 3 rows of heavy balls. Add rows strategically and use shaking to ensure a homogenous mix."""
+            update_info = simulation.update_info(4,3,3)
+            mixing_index = str(simulation.calculate_mixing_index(simulation.get_container_state()))
 
             if mode == 'agents system with extra measurement of heterogeneity':
                 while not user_started_auto_mode:
@@ -78,72 +88,48 @@ def run_simulation_periodically():
                     time.sleep(1)
                     simulation.step_log.clear()
 
-                history_file_path = 'history_json.json'
+            analysis_result = observation_agent.generate_output(container_state, model='ollama_qwencoder')
 
-                # Agents System
-                analysis_agent = ObservationAnalysisAgentWithTool(user_set_objective)
-                '''
-                delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
-                delta_mixing_index_text = str(delta_mixing_index)
-                '''
-
-                delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
-                delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
-
-                #analysis_result = analysis_agent.generate_output(simulation.get_container_state_in_text(), delta_mixing_index_text, model='ollama_llama3')
-                analysis_result = analysis_agent.generate_output(container_state, delta_mixing_index_text, model='ollama_llama3')
-                if analysis_result is None:
-                    analysis_result = "No valid analysis obtained"
-
-                
-                decision_agent = DecisionAgent(user_set_objective)
-                #decision = decision_agent.generate_output(simulation.get_container_state_in_text(), analysis_result, model='ollama_llama3')
+            if not analysis_result:
+                print("No valid analysis obtained. Exiting simulation.")
+                break
             
-                decision = decision_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
-                print("this is the decision", decision)
-                if not decision or 'action' not in decision:
-                    send_message_to_front_end("Invalid decision received, stopping simulation.")
-                    break
+            # Step 3: Decision Making by the Specific Agent
+            if "Adding Agent" in analysis_result:
+                print("Activating: Adding Agent")
+                decision = adding_agent.generate_output(container_state, update_info, model='ollama_llama3_zero')
+            elif "Mixing Agent" in analysis_result:
+                print("Activating: Mixing Agent")
+                decision = mixing_agent.generate_output(container_state, mixing_index, model='ollama_llama3')
+            else:
+                print(f"Unexpected agent suggestion: {analysis_result}. Exiting simulation.")
+                break
 
-                experiment_data_structure = {
-                    "id": None,
-                    "solving_process": [
-                        {
-                            "id": None,
-                            "observation": None,
-                            "reasoning": None,
-                            "action": None
-                        }
-                    ],
-                    "result": None
-                }
+            if not decision or 'action' not in decision:
+                print("Invalid decision received. Exiting simulation.")
+                break
 
-                step_data_structure = {"id": None, "observation": analysis_result,
-                                       "reasoning": decision, "action": decision['action']}
+            # Step 4: Perform the Action
+            if decision['action'] == 'shake':
+                simulation.shake(1)
+                print("Performed: Shake")
 
-                # Append the observation, reasoning and action to the history file
+            elif decision['action'] == 'add_balls':
+                number_of_rows = decision['parameters']['number_of_rows_to_add']
+                unit_of_weight = decision['parameters']['unit_of_weight']
+                simulation.add_balls(number_of_rows, unit_of_weight)
+                print(f"Performed: {number_of_rows} rows of {unit_of_weight} weight added")
 
+            elif decision['action'] == 'stop':
+                print("Performed: Stop")
+                print("Simulation completed successfully.")
+                break
+            else:
+                print(f"Unexpected action: {decision['action']}. Exiting simulation.")
+                break
 
-
-                # Agent system decision
-                if decision['action'] == 'shake':
-                    simulation.shake(1)
-                    send_message_to_front_end('shake'  + ". Reason:" + analysis_result)
-                    print('Shake')
-
-                elif decision['action'] == 'add_balls':
-                    simulation.add_balls(decision['parameters']['row_number'], decision['parameters']['unit_of_weight'])
-                    print('Add balls ' + str(decision['parameters']['row_number']) + ' weight: ' + str(
-                        decision['parameters']['unit_of_weight']))
-                    send_message_to_front_end('add ' + str(decision['parameters']['row_number']) + ' row of balls with ' + ' weight ' + str(
-                        decision['parameters']['unit_of_weight'])  + ". Reason:" + analysis_result)
-
-                elif decision['action'] == 'stop':
-                    print('Stop')
-                    simulation.step_log[-1]["analysis_result"] = analysis_result
-                    simulation.step_log[-1]["decision"] = decision
-                    send_message_to_front_end('stop' + ". Reason:" + analysis_result)
-                    break
+            # Add a delay to simulate time between steps
+            time.sleep(1)
             if mode != 'agents system with extra measurement of heterogeneity':
                 simulation.step_log[-1]["analysis_result"] = analysis_result
                 simulation.step_log[-1]["decision"] = decision
@@ -183,6 +169,8 @@ def run_simulation_debug():
         #container_state = simulation.get_container_state_in_text()
         container_state = simulation.get_container_state_in_text()
         update_info = simulation.update_info(4,3,3)
+        mixing_index = str(simulation.calculate_mixing_index(simulation.get_container_state()))
+
         print("update_info", update_info)
         #delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
         #delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
@@ -197,10 +185,10 @@ def run_simulation_debug():
         # Step 3: Decision Making by the Specific Agent
         if "Adding Agent" in analysis_result:
             print("Activating: Adding Agent")
-            decision = adding_agent.generate_output(container_state, update_info, analysis_result, model='ollama_llama3_zero')
+            decision = adding_agent.generate_output(container_state, update_info, model='ollama_llama3_zero')
         elif "Mixing Agent" in analysis_result:
             print("Activating: Mixing Agent")
-            decision = mixing_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
+            decision = mixing_agent.generate_output(container_state, mixing_index, model='ollama_llama3')
         else:
             print(f"Unexpected agent suggestion: {analysis_result}. Exiting simulation.")
             break
@@ -227,11 +215,6 @@ def run_simulation_debug():
         else:
             print(f"Unexpected action: {decision['action']}. Exiting simulation.")
             break
-
-        # Step 5: Visualize the current container state (optional: save to a file or display as text)
-        print("\nCurrent Container State:")
-        for row in simulation.get_container_state():
-            print(row)
 
         # Add a delay to simulate time between steps
         time.sleep(1)
