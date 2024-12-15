@@ -1,8 +1,8 @@
 {
-    "reason_for_an_action": "The container has fewer than 10 rows filled, and we need to add more rows to reach the desired container mixture.",
     "action": "add_balls",
     "parameters": {
-        "row_number": 1,
-        "unit_of_weight": 2
-    }
+        "number_of_rows_to_add": 3,
+        "unit_of_weight": 3
+    },
+    "reason_for_an_action": "The container is missing light and heavy balls to meet the objective of 4 rows of weight 1 and 3 rows of weight 3."
 }

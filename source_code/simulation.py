@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches  # packege for drawing shapes of balls in matplotlib
+import json
 
 
 matplotlib.use('Agg')
@@ -15,6 +16,29 @@ class ContainerBallSimulation:
         self.colors = {0: 'white', 1: 'yellow', 2: 'red', 3: 'blue'}  # Colors for each weight. 1 is lightest, 3 is heaviest
         self.step_log = []      # Log of steps taken in the simulation
         self.step_counter = 0   # Counter for the number of steps taken
+
+    def update_info(self, rows_ones, rows_twos, rows_threes):
+        num_ones = np.sum(self.container_state == 1)
+        num_twos = np.sum(self.container_state == 2)
+        num_threes = np.sum(self.container_state == 3)
+
+        left_rows_ones = int(rows_ones - (num_ones / 10))
+        left_rows_twos = int(rows_twos - (num_twos / 10))
+        left_rows_threes = int(rows_threes - (num_threes / 10))
+
+        if left_rows_ones < 0:
+            left_rows_ones = 0
+        if left_rows_twos < 0:  
+            left_rows_twos = 0
+        if left_rows_threes < 0:
+            left_rows_threes = 0
+
+        result = {
+            'rows_of_**1**_to_add': left_rows_ones,
+            'rows_of_**2**_to_add': left_rows_twos,
+            'rows_of_**3**_to_add': left_rows_threes
+        }
+        return str(result)
 
     def use_example(self, example_num):
         self.container_state = np.zeros(self.size, dtype=int)  # Reset container state (creat a new one with zeros sizeXsize)
@@ -107,7 +131,7 @@ class ContainerBallSimulation:
             "step": self.step_counter,
             "action": "add_balls",
             "parameters": {
-                "row_number": row_num,      #
+                "row_number": row_num,      
                 "unit_of_weight": weight
             },
             "container_state": self.get_container_state().tolist(),
@@ -116,6 +140,50 @@ class ContainerBallSimulation:
         }
         self.step_log.append(step)
         # print(self.get_step_log())
+
+    def add_balls2(self, num_rows, weight):
+        """
+        Add a specified number of rows of balls of the same weight to the container.
+        Balls will "fall" and settle at the bottom or on top of existing balls.
+        """
+        added = 0
+        num_cells_to_add = num_rows * self.size[1]  # Total number of cells to fill
+
+        # Iterate over the matrix from the bottom to the top (gravity effect)
+        for row in range(0, self.size[0]):  # Start from row 1
+            for col in range(self.size[1]):  # Iterate through all columns in the row
+                if self.container_state[row, col] == 0:  # Find an empty spot
+                    self.container_state[row, col] = weight
+                    added += 1
+                    if added >= num_cells_to_add:  # Stop once we've added the desired number of rows
+                        break
+            if added >= num_cells_to_add:  # Break outer loop if all cells are filled
+                break
+
+        # Log the step
+        self.step_counter += 1
+        current_mixing_index = self.calculate_mixing_index(self.get_container_state())
+        delta_mixing_index = (
+            current_mixing_index - self.step_log[-1]["mixing_index"]
+            if len(self.step_log) > 0
+            else current_mixing_index
+        )
+
+        step = {
+            "step": self.step_counter,
+            "action": "add_balls",
+            "parameters": {
+                "num_rows": num_rows,
+                "unit_of_weight": weight
+            },
+            "container_state": self.get_container_state().tolist(),
+            "mixing_index": current_mixing_index,
+            "delta_mixing_index": delta_mixing_index
+        }
+
+        self.step_log.append(step)
+
+
 
 
     def shake(self, shake_times):
@@ -182,9 +250,28 @@ class ContainerBallSimulation:
         """Return the current state of the container in text format."""
         modified_string = ' ' + str(np.flipud(self.container_state.copy()))[1:-1]
         rows = modified_string.strip().split('\n')
-        formatted_rows = [f"row {10 - i}: {row.strip()}" for i, row in enumerate(rows)]
-        formatted_string = '\n'.join(formatted_rows)
+        #formatted_rows = [f"row {10 - i}: {row.strip()}" for i, row in enumerate(rows)]
+        #formatted_string = '\n'.join(formatted_rows)
+        formatted_string = '\n'.join(rows)
+
         return formatted_string
+    
+    def get_container_state_in_json(self):
+        """Return the current state of the container in JSON matrix format."""
+        # Flip the matrix vertically to match the container's orientation
+        flipped_matrix = np.flipud(self.container_state.copy())
+
+        # Convert the flipped matrix to a Python list of lists
+        json_matrix = flipped_matrix.tolist()
+
+        # Construct the JSON object
+        json_representation = {
+            "matrix": json_matrix
+        }
+        print("shit")
+        # Return the JSON string representation
+        return json.dumps(json_representation, indent=4)
+
     
     def get_container_minimal_state(self):
         """Return the current state of the container in text format without row labels or numbers."""
@@ -232,10 +319,16 @@ class ContainerBallSimulation:
         return normalized_mixing_index
 
 
-#if __name__ == "__main__":
-#    sim = ContainerBallSimulation()
-#    sim.add_balls(2, 1)
-#    print("one")
-#    print(sim.get_container_state_in_text())
+if __name__ == "__main__":
+    sim = ContainerBallSimulation()
 
-    # so the parameters are the number of rows, the weight of the balls and the number of times the container is shaked.
+    sim.add_balls2(2, 1)
+    print("one")
+    print(sim.get_container_state_in_text())
+
+    sim.add_balls2(2,2)
+    print("two")
+    print(sim.get_container_state_in_text())
+
+    print(sim.update(4,3,3))
+

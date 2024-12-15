@@ -68,7 +68,7 @@ def run_simulation_periodically():
     with ((app.app_context())):
         time.sleep(5)
         while True:
-            container_state = simulation.get_container_state()
+            container_state = simulation.get_container_state_in_text()
             user_set_objective = """The objective is to fill and then mix a 10x10 container with 4 rows of light balls, 3 rows of normal balls, 
             and 3 rows of heavy balls. Add rows strategically and use shaking to ensure a homogenous mix."""
 
@@ -181,12 +181,15 @@ def run_simulation_debug():
     while True:
         # Step 1: Get the current container state and mixing index
         #container_state = simulation.get_container_state_in_text()
-        container_state = simulation.get_container_minimal_state()
-        delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
-        delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
+        container_state = simulation.get_container_state_in_text()
+        update_info = simulation.update_info(4,3,3)
+        print("update_info", update_info)
+        #delta_mixing_index = simulation.step_log[-1]["delta_mixing_index"] if len(simulation.step_log) > 0 else simulation.calculate_mixing_index(simulation.get_container_state())
+        #delta_mixing_index_text = str(delta_mixing_index) if delta_mixing_index is not None else "No change in mixing index"
 
         # Step 2: Observation Analysis
-        analysis_result = observation_agent.generate_output(container_state, delta_mixing_index_text, model='ollama_llama3')
+        analysis_result = observation_agent.generate_output(container_state, model='ollama_qwencoder')
+
         if not analysis_result:
             print("No valid analysis obtained. Exiting simulation.")
             break
@@ -194,7 +197,7 @@ def run_simulation_debug():
         # Step 3: Decision Making by the Specific Agent
         if "Adding Agent" in analysis_result:
             print("Activating: Adding Agent")
-            decision = adding_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
+            decision = adding_agent.generate_output(container_state, update_info, analysis_result, model='ollama_llama3_zero')
         elif "Mixing Agent" in analysis_result:
             print("Activating: Mixing Agent")
             decision = mixing_agent.generate_output(container_state, analysis_result, model='ollama_llama3')
@@ -212,10 +215,10 @@ def run_simulation_debug():
             print("Performed: Shake")
         
         elif decision['action'] == 'add_balls':
-            row_number = decision['parameters']['row_number']
+            number_of_rows = decision['parameters']['number_of_rows_to_add']
             unit_of_weight = decision['parameters']['unit_of_weight']
-            simulation.add_balls(row_number, unit_of_weight)
-            print(f"Performed: Add {unit_of_weight} balls to row {row_number}")
+            simulation.add_balls(number_of_rows, unit_of_weight)
+            print(f"Performed: {number_of_rows} rows of {unit_of_weight} weight added")
         
         elif decision['action'] == 'stop':
             print("Performed: Stop")

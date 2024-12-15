@@ -1,0 +1,7 @@
+the adding agent can receive external infot abou how many balls are left of each color. As a sensor information.
+the addig agent don't need to know the weight of the balls an the general task.
+
+
+
+
+none of us have a gpu cuda. bitsandbites not acessible for mps

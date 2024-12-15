@@ -3,7 +3,6 @@ import json
 import re
 
 RESET = "\033[0m"  # Reset to default color
-
 # Define color codes
 RED = "\033[91m"
 GREEN = "\033[92m"
@@ -40,70 +39,158 @@ class AddingAgent:
     The Adding Agent is responsible only for adding balls to the container.
     """
     def __init__(self):
-        self.prompt_template = """You are the Adding Agent in a multi-agent system. Your decisions must be supported by insights provided by an Observation Agent.
+        self.prompt_template = """You are the Adding Agent in a multi-agent system.
 
-### Context:
-There is a container structured as a 10x10 matrix that's not totally filled. 
-You will add to the container a certain number of rows of balls of the same type to achive the desired container mixture:
-There are 3 different types of balls with diferent weights:
+### Task:
+You are responsible for adding rows of balls to a 10x10 container matrix.
+There are 3 types of balls:
   - **1** = light ball (weight 1)
   - **2** = normal ball (weight 2)
-  - **3** = heavy ball (weight 3)   
-In the matrix a row is empty if it is made by empty cells represented by number 0:
-- 0 indicates an empty cell.
-The gravity has effect on balls and its direction is from row 10 to row 1. So the row 1 is the bottom row and row 10 is the top row.
-The container is filled row by row from the bottom to the top.
-The container can hold up to exactly **10 rows** of balls. The process ends when there are no longer empty rows (filled with 0).
-When new rows of balls are added, they fall and settle on top of existing rows, filling the first available empty rows above.
+  - **3** = heavy ball (weight 3)
+The container's gravity causes balls to settle at the lowest empty rows, and the total capacity is 10 rows. 
 
 ### Objective:
-You will receive as input current state of the container represented as a 10x10 matrix and external insights about it. 
-with that information you will perform your action. Add to the container a certain number of rows of balls of the same type to achive the desired container mixture:
-You should answear in the output format.
-
-### Actions:
-1. **Add Balls**:
-   - If the container has fewer than 10 rows filled, you can add rows of balls, either 1, 2, or 3 rows at a time, of the same type.
-   - The total number of rows must not exceed 10.
-   - Output Format: {"action": "add_balls", "parameters": {"number_of_rows_added": <int>, "unit_of_weight": <int>}}
+Ensure the container has exactly:
+  - **4 number of rows with 1**
+  - **3 number of rows with 2**
+  - **3 number of rows with 3**
 
 ### Action Rules:
-- If the container has fewer than 10 rows filled:
-  - Decide to **"add_balls"** until the container is completely filled with 10 rows.
-  - **Ensure the total number of rows does not exceed 10**.
+**Do not add more than three rows of the same value at once.**
+**Do not add more than 10 rows in total.** 
 
-# Output Format
-For example, you provide the output in this format after you receive the input (matrix and insights):
-look at itraction example
-Input exemple:
-Current state of the container, with fewer than 10 rows filled.
-Output exemple:
-{"reason_for_an_action": "", "action": "add_balls", "parameters": {"number_of_rows_added": <int>, "unit_of_weight": <int>}}
+### Action Format:
+{
+  "action": "add_balls",
+  "parameters": {
+    "number_of_rows_to_add": <int>,
+    "unit_of_weight": <int>
+  },
+  "reason_for_an_action": "str"
+}
+
+# Example Shots:
+### Input 
+The container state is:
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+
+have this information in consideration:
+{'number_of_rows_of_**1**_to_add': 0, 'number_of_rows_of_**2**_to_add': 3, 'number_of_rows_of_**3**_to_add': 0}
+
+Add rows to achieve **respecting the rows left to add** to achieve the objectives.
+
+### Output
+Provide the answer in a JSON format only without extra characters inside of it:
+
+{
+  "action": "add_balls",
+  "parameters": {
+    "number_of_rows_to_add": 3,
+    "unit_of_weight": 2
+  },
+  "reason_for_an_action": "The container is missing normal balls to meet the objective of 3 rows of weight 2."
+}
+
+### Input 
+The container state is:
+ [0 0 0 0 0 0 0 0 0 0]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+
+have this information in consideration:
+{'number_of_rows_of_**1**_to_add': 1, 'number_of_rows_of_**2**_to_add': 0, 'number_of_rows_of_**3**_to_add': 0}
+
+Add rows to achieve **respecting the rows left to add** to achieve the objectives.
+
+###Output:
+Provide the answer in a JSON format only without extra characters inside of it:
+
+{
+  "action": "add_balls",
+  "parameters": {
+    "number_of_rows_to_add": 3,
+    "unit_of_weight": 2
+  },
+  "reason_for_an_action": "The container is missing one row 1 balls"
+}
 
 ### Input:
-You shall pay attention to the following insights: {{analysis_insights}}
+The container state is:
+[0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+
+have this information in consideration:
+{'number_of_rows_of_**1**_to_add': 0, 'number_of_rows_of_**2**_to_add': 0, 'number_of_rows_of_**3**_to_add': 3}
+
+Add rows to achieve **respecting the rows left to add** to achieve the objectives.
+
+###Output:
+Provide the answer in a JSON format only without extra characters inside of it:
+
+{
+  "action": "add_balls",
+  "parameters": {
+    "number_of_rows_to_add": 3,
+    "unit_of_weight": 3
+  },
+  "reason_for_an_action": "The container is missing light and heavy balls to meet the objective of 4 rows of weight 1 and 3 rows of weight 3."
+}
+
+### Input:
 The container state is:
 {{input_text}}
 
-You should now finish the output, and only generate one action. generate only the json Output Format:
+have this information in consideration:
+{{update_info}}
 
-###Output **"Only the JSON object without extra characters outside of it."**:
+
+Add rows to achieve **respecting the rows left to add** to achieve the objectives.
+
+### Output:
+Provide the answer in a JSON format only without extra characters inside of it:
 """
 
-    def generate_output(self, input_text, analysis_insights, model):
+    def generate_output(self, input_text, update_info, analysis_insights, model):
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
-        self.prompt = self.prompt.replace("{{analysis_insights}}", analysis_insights)
+        self.prompt = self.prompt.replace("{{update_info}}", update_info)
         print(f"{RED}***********************{RESET}")
         print(f"{RED}Adding Agent Working{RESET}")
         print(f"{RED}***********************{RESET}")
         print(f"{RED}Input Adding Agent:{RESET}")
         print(f"{RED}***********************{RESET}")
-        print(self.prompt)
+        print(input_text)
+        print(update_info)
 
         try:
+
             text_output = gpt_model_call(self.prompt, model=model)
+            print("the text output before json", text_output)
             text_output = extract_and_clear_json_str(text_output)
-            print("the text output befor json", text_output)
+            print("the text output after json", text_output)
         except Exception as e:
             print(f"Error: {e}")
             return None
@@ -120,7 +207,7 @@ You should now finish the output, and only generate one action. generate only th
             json.dump(result_json, file, indent=4)
         print(f"{BLUE}Result:{RESET}\n")
         print(f"{BLUE}***********************{RESET}") 
-        print(text_output)
+        print(input_text)
         return result_json
 
 
@@ -129,20 +216,15 @@ class MixingAgent:
     The Mixing Agent is responsible for deciding whether to shake or stop the process.
     """
     def __init__(self):
-        self.prompt_template = """You are the Mixing Agent in a multi-agent system. Your decisions must be supported by insights provided by an Observation Agent.
+        self.prompt_template = """You are the Mixing Agent in a multi-agent system. 
 
-### Context:
-There is a container structured as a 10x10 matrix that's completely filled. 
-Your task is to mix three types of balls—heavy, normal, and light—to achieve a well-mixed distribution. Each cell in the matrix represents the weight of the ball at that position:
-There are 3 different types of balls with diferent weights:
+        
+You are responsible for adding rows of balls to a 10x10 container matrix.
+There are 3 types of balls:
   - **1** = light ball (weight 1)
   - **2** = normal ball (weight 2)
   - **3** = heavy ball (weight 3)
-In the matrix a row is empty if it is made by empty cells represented by number 0:
-- 0 indicates an empty cell.
-The gravity has an effect on balls, and its direction is from row 10 to row 1. So row 1 is the bottom row and row 10 is the top row.
-The container is filled row by row from the bottom to the top.
-The container can hold up to exactly **10 rows** of balls. The process ends when all rows are filled, and the distribution of balls is well mixed.
+The container's gravity causes balls to settle at the lowest empty rows, and the total capacity is 10 rows. 
 
 ### Objective:
 You will receive as input the current state of the container represented as a 10x10 matrix and external insights about it.
@@ -211,7 +293,7 @@ You should now finish the output, and only generate one action. Generate only th
             json.dump(result_json, file, indent=4)
         print(f"{BLUE}Result:{RESET}\n")
         print(f"{BLUE}***********************{RESET}")
-        print(text_output)
+        print(input_text)
         return result_json
 
 
@@ -228,58 +310,114 @@ class ObservationAnalysisAgentWithTool:
   - **1** = light ball (weight 1)
   - **2** = normal ball (weight 2)
   - **3** = heavy ball (weight 3)
-- The container is considered "full" if **all 10 rows** are completely filled with balls (i.e., no zeroes in the entire 10x10 matrix).
-- If there is **at least one empty cell 0** anywhere in the matrix, or if fewer than 10 rows contain balls, the container is considered "not full."
-- If the container is not full, the correct agent to call is the "Adding Agent."
-- If the container is full, the correct agent to call is the "Mixing Agent."
+- **0** indicates an empty cell in the matrix.
 
 ### Your Task:
-1. Check if the container is full or not:
-   - **Full**: All 10 rows are filled with no empty cells (no zeroes).
-   - **Not Full**: If there is at least one empty cell or fewer than 10 rows of balls.
-2. If the container is not full, the correct agent to call is the **Adding Agent**.
-3. If the container is full, the correct agent to call is the **Mixing Agent**.
+The matrix is **complete: There are not 0 in the matrix**.
+The matrix is **incomplete: There are 0 in the matrix**.
+If the container is incomplete you call **Adding Agent**.
+If the container is complete you call the **Mixing Agent**.
 
-### Important Clarification:
-- A completely empty container (all zeroes) is clearly not full, as it contains no balls.
 
-### Step-by-Step Logic for Determining Fullness:
-1. Read the entire 10x10 matrix.
-2. Check every cell. If **any cell is 0**, then `is_full = false`.
-3. If no cells are 0 (meaning all cells have 1, 2, or 3), then `is_full = true`.
-4. If `is_full = true`, `agent_to_call = "Mixing Agent"`.
-5. If `is_full = false`, `agent_to_call = "Adding Agent"`.
+### Example Shots:
+### Input 
+1.
+The container state is:
+[
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+]
+
+Now, add rows of balls in order to achieve the objectives:
+
+### Output 
+Provide the answer in a JSON format only:
+
+{
+  "state": incomplete,
+  "agent_to_call": "Adding Agent"
+}
+
+2.
+### Input 
+The container state is:
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 0 0 0 0 0 0 0]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+
+
+Now, add rows of balls in order to achieve the objectives:
+
+### Output
+Provide the answer in a JSON format only:
+
+{
+  "state": incomplete,
+  "agent_to_call": "Adding Agent"
+}
+
+3.
+### Input 
+The container state is:
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [3 3 3 3 3 3 3 3 3 3]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [2 2 2 2 2 2 2 2 2 2]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+ [1 1 1 1 1 1 1 1 1 1]
+
+Now, add rows of balls in order to achieve the objectives:
+
+### Output
+Provide the answer in a JSON format only:
+
+{
+  "state": complete,
+  "agent_to_call": "Mixing Agent"
+}
 
 ### Input:
 {{input_text}}
-
-{{delta_mixing_index}}
 
 ### Output:
 Provide the answer in a JSON format only:
 """
 
 
-    def generate_output(self, input_text, delta_mixing_index, model):
-        if delta_mixing_index is None:
-            delta_mixing_index = "No change in mixing index available"
-        else:
-            delta_mixing_index = str(delta_mixing_index)
-    
+    def generate_output(self, input_text, model):
         #self.prompt = self.prompt_template.replace("{{agent_objective}}", self.agent_objective)
+
         self.prompt = self.prompt_template.replace("{{input_text}}", input_text)
-        self.prompt = self.prompt.replace("{{delta_mixing_index}}", delta_mixing_index)
+        #self.prompt = self.prompt.replace("{{delta_mixing_index}}", delta_mixing_index)
         # Print with green color
         print(f"\n\n{GREEN}***********************{RESET}")
         print(f"{GREEN}Observation Agent Working (Using Tool){RESET}")
         print(f"{GREEN}***********************{RESET}")
         print(f"{GREEN}Input Observation Agent:\n{RESET}")
         print(f"{GREEN}***********************{RESET}")
-        print(self.prompt)
+        print(input_text)
 
         try:
             text_output = gpt_model_call(self.prompt, model=model)
-
         except Exception as e:
             print(f"Error: {e}")
 
