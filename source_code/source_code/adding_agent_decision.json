@@ -1,0 +1,11 @@
+{
+    "reason_for_an_action": "The container is missing light and heavy balls to meet the objective of 4 rows of weight 1.",
+    "light_balls_remaining": 3,
+    "normal_balls_remaining": 0,
+    "heavy_balls_left": 3,
+    "action": "add_balls",
+    "parameters": {
+        "number_of_rows_to_add": 2,
+        "unit_of_weight": 1
+    }
+}
