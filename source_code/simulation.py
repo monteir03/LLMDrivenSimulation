@@ -316,7 +316,7 @@ class ContainerBallSimulation:
         # Normalize the mixing degree to a 0-1 range (considering the maximum diversity is for 3 different elements)
         normalized_mixing_index = average_diversity / 3
 
-        return normalized_mixing_index
+        return round(normalized_mixing_index, 2)
 
 
 if __name__ == "__main__":

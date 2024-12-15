@@ -1,3 +1,13 @@
 Mixing Index History
 =====================
 Mixing Index: 0.0
+Mixing Index: 0.01
+Mixing Index: 0.03
+Mixing Index: 0.05
+Mixing Index: 0.09
+Mixing Index: 0.12
+Mixing Index: 0.14
+Mixing Index: 0.16
+Mixing Index: 0.17
+Mixing Index: 0.18
+Mixing Index: 0.18

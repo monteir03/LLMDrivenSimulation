@@ -230,10 +230,10 @@ Light balls tend to rise.
 
 ### Objective:
 Analyse the matrix and decide if the mixture is homogeneously distributed or not.
-Use the mixing index to determine the homogeneity of the mixture.
-If the mixture is homogeneous, **stop**. If not, **shake**.
-if mixing index value close to 1 **shake**. 
-If mixing index  value e close to 0 **stop**.
+Make use of the mixing index to determine the homogeneity of the mixture.
+If the mixture is homogeneous, **stop**. If not, **shake**.s
+if mixing index is 0.18 or higher than 0.18 **stop**.
+If mixing index  value e close to 0 **shake**.
 
 ### Action Format:
 {"reason_for_an_action": "", "action": "shake or stop"}
